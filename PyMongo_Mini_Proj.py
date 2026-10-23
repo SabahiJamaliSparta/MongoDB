@@ -3,14 +3,25 @@ import requests
 
 
 def get_starships():
-    # Request the first page of starships
-    response = requests.get("https://swapi.dev/api/starships/", timeout=10)
+    # Set the starting URL and create an empty list
+    url = "https://swapi.dev/api/starships/"
+    starships = []
 
-    # Check that the request succeeded
-    response.raise_for_status()
+    # Repeat while another page is available
+    while url:
+        # Request the current page and check for errors
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
 
-    # Return the response as Python data
-    return response.json()
+        # Add the current page's starships to the list
+        starships.extend(data["results"])
+
+        # Get the next page's URL
+        url = data["next"]
+
+    # Return all starships
+    return starships
 
 
 # Connect to the local MongoDB server
@@ -19,7 +30,10 @@ client = pymongo.MongoClient()
 # Select the StarWars database
 db = client["StarWars"]
 
-# Fetch the data and display the first starship - Results show CR90 Corvette fetched
-data = get_starships()
-print(data["results"][0])
+# Fetch all starships and display the total
+starships = get_starships()
+print("Starships fetched:", len(starships))
+
+# Close the MongoDB connection
+client.close()
 
