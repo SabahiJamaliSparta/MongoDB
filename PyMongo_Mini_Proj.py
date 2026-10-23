@@ -34,6 +34,14 @@ db = client["StarWars"]
 starships = get_starships()
 print("Starships fetched:", len(starships))
 
+#Check how we can match pilots to your characters.
+
+# Select the existing characters collection
+characters = db["Characters"]
+
+# Display one character's identifier, name and API URL
+print(characters.find_one({}, {"_id": 1, "name": 1, "url": 1}))
+
 # Close the MongoDB connection
 client.close()
 
