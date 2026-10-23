@@ -1,6 +1,21 @@
 import pymongo
 import requests
 
+def get_pilot_id(pilot_url, characters):
+    # Request the pilot's details and check for errors
+    response = requests.get(pilot_url, timeout=10)
+    response.raise_for_status()
+    pilot = response.json()
+
+    # Find the pilot in the existing characters collection
+    character = characters.find_one({"name": pilot["name"]})
+
+    # Stop if the pilot cannot be matched
+    if character is None:
+        raise ValueError("Pilot not found: " + pilot["name"])
+
+    # Return the character's existing ObjectId
+    return character["_id"]
 
 def get_starships():
     # Set the starting URL and create an empty list
@@ -35,12 +50,12 @@ starships = get_starships()
 print("Starships fetched:", len(starships))
 
 #Check how we can match pilots to your characters.
-
 # Select the existing characters collection
 characters = db["Characters"]
 
-# Display one character's identifier, name and API URL
-print(characters.find_one({}, {"_id": 1, "name": 1, "url": 1}))
+# Test matching Luke Skywalker's API record to his ObjectId
+pilot_id = get_pilot_id("https://swapi.dev/api/people/1/", characters)
+print("Pilot ObjectId:", pilot_id)
 
 # Close the MongoDB connection
 client.close()
