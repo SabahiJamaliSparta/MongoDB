@@ -17,6 +17,22 @@ def get_pilot_id(pilot_url, characters):
     # Return the character's existing ObjectId
     return character["_id"]
 
+def transform_pilots(starships, characters):
+    # Go through every starship
+    for starship in starships:
+        pilot_ids = []
+
+        # Find the existing ObjectId for each pilot URL
+        for pilot_url in starship["pilots"]:
+            pilot_id = get_pilot_id(pilot_url, characters)
+            pilot_ids.append(pilot_id)
+
+        # Replace the URLs with the list of ObjectIds
+        starship["pilots"] = pilot_ids
+
+    # Return the transformed starships
+    return starships
+
 def get_starships():
     # Set the starting URL and create an empty list
     url = "https://swapi.dev/api/starships/"
@@ -50,12 +66,18 @@ starships = get_starships()
 print("Starships fetched:", len(starships))
 
 #Check how we can match pilots to your characters.
+
 # Select the existing characters collection
 characters = db["Characters"]
 
-# Test matching Luke Skywalker's API record to his ObjectId
-pilot_id = get_pilot_id("https://swapi.dev/api/people/1/", characters)
-print("Pilot ObjectId:", pilot_id)
+# Replace pilot URLs with character ObjectIds
+starships = transform_pilots(starships, characters)
+
+# Display one ship with pilots to check the transformation
+for starship in starships:
+    if starship["pilots"]:
+        print(starship["name"], starship["pilots"])
+        break
 
 # Close the MongoDB connection
 client.close()
