@@ -2,10 +2,16 @@ import pymongo
 import requests
 
 def get_pilot_id(pilot_url, characters):
-    # Request the pilot's details and check for errors
-    response = requests.get(pilot_url, timeout=10)
-    response.raise_for_status()
-    pilot = response.json()
+    try:
+        # Request the pilot's details and check for errors
+        response = requests.get(pilot_url, timeout=10)
+        response.raise_for_status()
+        pilot = response.json()
+
+    except requests.RequestException as error:
+        # Report the request error and stop
+        print("Unable to fetch pilot:", error)
+        raise
 
     # Find the pilot in the existing characters collection
     character = characters.find_one({"name": pilot["name"]})
@@ -38,12 +44,18 @@ def get_starships():
     url = "https://swapi.dev/api/starships/"
     starships = []
 
-    # Repeat while another page is available
+    # Repeat to retrieve data from additional pages
     while url:
-        # Request the current page and check for errors
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        try:
+            # Request the current page and check for errors
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+        except requests.RequestException as error:
+            # Report the request error and stop
+            print("Unable to fetch starships:", error)
+            raise
 
         # Add the current page's starships to the list
         starships.extend(data["results"])
@@ -53,7 +65,6 @@ def get_starships():
 
     # Return all starships
     return starships
-
 
 # Connect to the local MongoDB server
 client = pymongo.MongoClient()
@@ -66,7 +77,6 @@ starships = get_starships()
 print("Starships fetched:", len(starships))
 
 #Check how we can match pilots to your characters.
-
 # Select the existing characters collection
 characters = db["Characters"]
 
@@ -79,6 +89,26 @@ for starship in starships:
         print(starship["name"], starship["pilots"])
         break
 
+def save_starships(starships, collection):
+    # Go through each transformed starship
+    for starship in starships:
+        # Replace an existing ship or insert it if not found
+        collection.replace_one(
+            {"url": starship["url"]}, starship, upsert=True
+        )
+# Select the starships collection
+starships_collection = db["Starships"]
+
+# Save the transformed starships
+save_starships(starships, starships_collection)
+
+# Display the number of stored starships
+print("Starships stored:", starships_collection.count_documents({}))
+
 # Close the MongoDB connection
 client.close()
+
+
+
+
 
