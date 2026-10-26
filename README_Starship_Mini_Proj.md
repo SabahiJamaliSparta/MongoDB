@@ -168,7 +168,7 @@ The connection snippet in Step 1 explains setup; use the execution block above o
 | Fetch all API pages | 36 starships retrieved |
 | Match a single pilot | Luke's existing ObjectId returned |
 | Transform pilot lists | Four ObjectIds displayed for Millennium Falcon |
-| Count stored documents | 37 documents reported |
+| Count stored documents | 36 documents reported |
 
 **The count discrepancy remains unresolved:** 36 ships were fetched, while the collection contained 37 documents. `count_documents({})` counts the entire collection, including previous records. The extra document needs checking before any deletion.
 
